@@ -32,14 +32,5 @@ public class LoginModel {
         this.password = password;
     }
 
-/*    public LoginModel(CourierModel courier) {
-        this.viewLogin = courier.getLogin();
-        this.viewPassword = courier.getPassword();
-    }
-
-    public static LoginModel from(CourierModel courier) {
-        return new LoginModel(courier);
-    }*/
-
 }
 
