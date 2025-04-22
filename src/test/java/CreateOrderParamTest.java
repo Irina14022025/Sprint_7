@@ -1,7 +1,8 @@
-import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
+import io.restassured.response.Response;
 import model.OrderModel;
+import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,12 +12,15 @@ import steps.OrderSteps;
 import java.util.List;
 
 import static TestData.TestValue.*;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static steps.OrderSteps.cancelOrder;
 import static steps.OrderSteps.createOrder;
 
 @RunWith(Parameterized.class)
 public class CreateOrderParamTest {
 
+    int trackId;
+    private OrderModel order;
     private String firstName;
     private String lastName;
     private String address;
@@ -46,6 +50,8 @@ public class CreateOrderParamTest {
                 {ORDER_FIRST_NAME, ORDER_LAST_NAME, ORDER_ADDRESS, ORDER_METRO_STATION, ORDER_PHONE, ORDER_RENT_TIME,
                         ORDER_DELIVERY_DATE, ORDER_COMMENT, List.of("BLACK")},
                 {ORDER_FIRST_NAME, ORDER_LAST_NAME, ORDER_ADDRESS, ORDER_METRO_STATION, ORDER_PHONE, ORDER_RENT_TIME,
+                        ORDER_DELIVERY_DATE, ORDER_COMMENT, List.of("GREY")},
+                {ORDER_FIRST_NAME, ORDER_LAST_NAME, ORDER_ADDRESS, ORDER_METRO_STATION, ORDER_PHONE, ORDER_RENT_TIME,
                         ORDER_DELIVERY_DATE, ORDER_COMMENT, List.of("BLACK", "GREY")},
                 {ORDER_FIRST_NAME, ORDER_LAST_NAME, ORDER_ADDRESS, ORDER_METRO_STATION, ORDER_PHONE, ORDER_RENT_TIME,
                         ORDER_DELIVERY_DATE, ORDER_COMMENT, List.of()}
@@ -60,14 +66,21 @@ public class CreateOrderParamTest {
 
     @Test
     @DisplayName("Проверка создания заказа с разным вариантом выбора цвета самоката: один цвет, два цвета или без цвета")
-    public void createOrderWithDifferentColours(){
+    public void createOrderWithDifferentColoursTest(){
         OrderSteps orderSteps = new OrderSteps();
-        OrderModel order = new OrderModel(firstName, lastName, address, metroStation, phone, rentTime, deliveryDate, comment, color);
-        createOrder(order)
-                .then().assertThat()
-                .statusCode(201)
-                .body("track", notNullValue());
-
+        order = new OrderModel(firstName, lastName, address, metroStation, phone, rentTime, deliveryDate, comment, color);
+        Response response = createOrder(order);
+        orderSteps.checkStatusAndBodyResponseCreateOrder(response);
+        trackId = response.path("track");
     }
 
+
+    @After
+    public void cleanUp(){
+        OrderSteps orderSteps = new OrderSteps();
+        cancelOrder(trackId)
+                .then()
+                .statusCode(200)
+                .body("ok", equalTo(true));
+    }
 }
